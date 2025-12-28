@@ -1,47 +1,56 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import http from "../api/http";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 const CourseForm = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({ title: "", description: "" });
+  const { id } = useParams();
+  const [form, setForm] = useState({ title: "", description: "" });
   const [error, setError] = useState("");
 
-  const handleChange = (e) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  useEffect(() => {
+    const fetchOne = async () => {
+      if (!id) return;
+      try {
+        const { data } = await http.get(`/courses/${id}`);
+        setForm({ title: data.title, description: data.description });
+      } catch (err) {
+        setError(err?.response?.data?.message || "Failed to load course");
+      }
+    };
+    fetchOne();
+  }, [id]);
+
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    if (!form.title || !form.description) return setError("Title and description are required");
     try {
-      await http.post("/courses", formData);
+      if (id) {
+        await http.put(`/courses/${id}`, form);
+      } else {
+        await http.post("/courses", form);
+      }
       navigate("/courses");
     } catch (err) {
-      setError(err?.response?.data?.message || "Failed to save course");
+      setError(err?.response?.data?.message || "Save failed");
     }
   };
 
   return (
     <div className="container">
-      <h1>Create Course</h1>
-      {error && <p style={{ color: "crimson" }}>{error}</p>}
+      <h1 className="page-title">{id ? "Edit course" : "Create course"}</h1>
+      <p className="subtle">{id ? "Update your course details." : "Publish a new course."}</p>
+      {error && <p className="error">{error}</p>}
       <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          name="title"
-          placeholder="Course Title"
-          value={formData.title}
-          onChange={handleChange}
-          required
-        />
-        <textarea
-          name="description"
-          placeholder="Course Description"
-          value={formData.description}
-          onChange={handleChange}
-          required
-        />
-        <button type="submit">Save Course</button>
+        <input name="title" placeholder="Course title" value={form.title} onChange={handleChange} />
+        <textarea name="description" placeholder="Course description" rows={6} value={form.description} onChange={handleChange} />
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <button type="submit">{id ? "Update" : "Save"}</button>
+          <button type="button" className="ghost" onClick={() => navigate("/courses")}>Cancel</button>
+        </div>
       </form>
     </div>
   );

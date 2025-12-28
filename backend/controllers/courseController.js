@@ -12,7 +12,7 @@ export const createCourse = async (req, res) => {
     const course = await Course.create({
       title: title.trim(),
       description: description?.trim(),
-      isPublished: !!isPublished,
+      isPublished: req.user.role === "admin" || req.user.role === "instructor" ? true : false,
       createdBy: req.user.id
     });
 
@@ -42,7 +42,7 @@ export const getCourses = async (req, res) => {
   }
 };
 
-// Update Course (owner or admin)
+// Update Course 
 export const updateCourse = async (req, res) => {
   try {
     const { id } = req.params;
@@ -69,7 +69,7 @@ export const updateCourse = async (req, res) => {
   }
 };
 
-// Delete Course (owner or admin)
+// Delete Course 
 export const deleteCourse = async (req, res) => {
   try {
     const { id } = req.params;

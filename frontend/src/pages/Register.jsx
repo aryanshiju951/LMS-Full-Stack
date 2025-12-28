@@ -5,17 +5,17 @@ import { useNavigate } from "react-router-dom";
 const Register = () => {
   const { register } = useAuth();
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({ name: "", email: "", password: "" });
+  const [form, setForm] = useState({ name: "", email: "", password: "", role: "student" });
   const [error, setError] = useState("");
 
-  const handleChange = (e) =>
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    if (!form.name || !form.email || !form.password) return setError("All fields are required");
     try {
-      await register(formData);
+      await register(form);
       navigate("/dashboard");
     } catch (err) {
       setError(err?.response?.data?.message || "Registration failed");
@@ -24,37 +24,19 @@ const Register = () => {
 
   return (
     <div className="container">
-      <h1>Register</h1>
-      {error && <p style={{ color: "crimson" }}>{error}</p>}
+      <h1 className="page-title">Create your account</h1>
+      <p className="subtle">Select role to register as Student, Instructor, or Admin.</p>
+      {error && <p className="error">{error}</p>}
       <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          name="name"
-          placeholder="Full Name"
-          value={formData.name}
-          onChange={handleChange}
-          required
-        />
-
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={formData.email}
-          onChange={handleChange}
-          required
-        />
-
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
-          required
-        />
-
-        <button type="submit">Sign Up</button>
+        <input name="name" placeholder="Full name" value={form.name} onChange={handleChange} />
+        <input type="email" name="email" placeholder="Email" value={form.email} onChange={handleChange} />
+        <input type="password" name="password" placeholder="Password" value={form.password} onChange={handleChange} />
+        <select name="role" value={form.role} onChange={handleChange}>
+          <option value="student">Student</option>
+          <option value="instructor">Instructor</option>
+          <option value="admin">Admin</option>
+        </select>
+        <button type="submit">Sign up</button>
       </form>
     </div>
   );
